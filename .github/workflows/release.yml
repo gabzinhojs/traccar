@@ -14,45 +14,30 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      # Checkout do repositório
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           submodules: true
-      
-      # Checkout do branch ou tag específico
       - run: git checkout ${{ github.ref_name }}
         working-directory: ./traccar-web
-
-      # Setup do Java
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
-      
-      # Construção do projeto Java
       - run: ./gradlew build
-
-      # Setup do Node.js
       - uses: actions/setup-node@v4
         with:
           node-version: 21
           cache: npm
           cache-dependency-path: traccar-web/package-lock.json
-      
-      # Instalar dependências e construir o frontend
       - run: npm ci && npm run build
         working-directory: ./traccar-web
-
-      # Instalar dependências do sistema
       - run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
-          sudo apt-get install -y libgcc-s1:i386 libstdc++6:i386
-          sudo apt-get install -y innoextract makeself wine32 s3cmd
-
-      # Baixar dependências e construir instaladores
+          sudo apt-get install libgcc-s1:i386 libstdc++6:i386
+          sudo apt-get install innoextract makeself wine32 s3cmd
       - name: Build installers
         working-directory: ./setup
         run: |
@@ -61,11 +46,17 @@ jobs:
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_x64_linux_hotspot_21.0.4_7.tar.gz
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.4_7.tar.gz
           ./package.sh ${{ github.event.inputs.version }}
-
-      # Criação de uma release no GitHub
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./setup/traccar-*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Publish installers to repository
+        working-directory: ./setup
+        run: |
+          # Move installers to a specific directory
+          mkdir -p ../../installers
+          mv traccar-*.zip ../../installers/
+      - name: Commit and push installers to repository
+        working-directory: ../../
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add installers/
+          git commit -m "Add installers for version ${{ github.event.inputs.version }}"
+          git push origin ${{ github.ref_name }}
