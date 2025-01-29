@@ -46,14 +46,9 @@ jobs:
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_x64_linux_hotspot_21.0.4_7.tar.gz
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.4_7.tar.gz
           ./package.sh ${{ github.event.inputs.version }}
-      - name: Create release and upload installers
-        run: |
-          VERSION=${{ github.event.inputs.version }}
-          # Create a new Git tag for this release
-          git tag "v${VERSION}"
-          git push origin "v${VERSION}"
-          
-          # Create a GitHub release for this tag
-          gh release create "v${VERSION}" traccar-*.zip --title "Release ${VERSION}" --notes "Release version ${VERSION}"
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: ./setup/traccar-*.zip
