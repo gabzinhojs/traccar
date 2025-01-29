@@ -10,7 +10,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-22.04
 
     steps:
@@ -46,9 +45,11 @@ jobs:
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_x64_linux_hotspot_21.0.4_7.tar.gz
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.4_7.tar.gz
           ./package.sh ${{ github.event.inputs.version }}
-      - name: Create Release and Upload Installers
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./setup/traccar-*.zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload installers to file.io
+        working-directory: ./setup
+        run: |
+          FILE=$(find . -name 'traccar-*.zip')
+          RESPONSE=$(curl -X POST -F "file=@$FILE" https://file.io)
+          LINK=$(echo $RESPONSE | jq -r '.link')
+          echo "Installer uploaded: $LINK"
+          echo "UPLOAD_LINK=$LINK" >> $GITHUB_ENV
