@@ -10,7 +10,6 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-22.04
 
     steps:
@@ -18,26 +17,33 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
+
       - run: git checkout ${{ github.ref_name }}
         working-directory: ./traccar-web
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
+
       - run: ./gradlew build
+
       - uses: actions/setup-node@v4
         with:
           node-version: 21
           cache: npm
           cache-dependency-path: traccar-web/package-lock.json
+
       - run: npm ci && npm run build
         working-directory: ./traccar-web
+
       - run: |
           sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install libgcc-s1:i386 libstdc++6:i386
           sudo apt-get install innoextract makeself wine32
+
       - name: Build installers
         working-directory: ./setup
         run: |
@@ -46,10 +52,22 @@ jobs:
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_x64_linux_hotspot_21.0.4_7.tar.gz
           wget -q https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.4+7/OpenJDK21U-jdk_aarch64_linux_hotspot_21.0.4_7.tar.gz
           ./package.sh ${{ github.event.inputs.version }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          release_name: Release v${{ github.event.inputs.version }}
+          draft: false
+          prerelease: ${{ github.event.inputs.version == 'preview' }}
+
       - name: Upload installers as release assets
         uses: actions/upload-release-asset@v1
         with:
-          upload_url: ${{ github.event.release.upload_url }}
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./setup/traccar-*.zip
           asset_name: traccar-${{ github.event.inputs.version }}.zip
           asset_content_type: application/zip
