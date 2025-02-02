@@ -7,13 +7,16 @@ import org.traccar.BaseProtocolDecoder;
 import org.traccar.Protocol;
 import org.traccar.helper.BitUtil;
 import org.traccar.helper.UnitsConverter;
+import org.traccar.model.CellTower;
+import org.traccar.model.Network;
 import org.traccar.model.Position;
+import org.traccar.session.DeviceSession;
 
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Date;
 
 public class IterProtocolDecoder extends BaseProtocolDecoder {
 
@@ -32,8 +35,9 @@ public class IterProtocolDecoder extends BaseProtocolDecoder {
         }
     }
 
-    private Position decodePosition(ByteBuf buf, int sequence) {
+    private Position decodePosition(ByteBuf buf, int sequence, DeviceSession deviceSession) {
         Position position = new Position(getProtocolName());
+        position.setDeviceId(deviceSession.getDeviceId());
 
         // Time
         position.setTime(new Date(buf.readUnsignedInt() * 1000));
@@ -60,10 +64,11 @@ public class IterProtocolDecoder extends BaseProtocolDecoder {
             int mcc = buf.readUnsignedShort();
             int mnc = buf.readUnsignedShort();
             int lac = buf.readUnsignedShort();
-            int cid = buf.readUnsignedInt();
+            long cid = buf.readUnsignedInt();
             int rxLevel = buf.readUnsignedByte();
 
-            position.setNetwork(new Network(CellTower.from(mcc, mnc, lac, cid, rxLevel)));
+            Network network = new Network(CellTower.from(mcc, mnc, lac, cid, rxLevel));
+            position.setNetwork(network);
         }
 
         // Status
@@ -93,6 +98,11 @@ public class IterProtocolDecoder extends BaseProtocolDecoder {
 
         int pid = buf.getByte(buf.readerIndex() - 7);
 
+        DeviceSession deviceSession = getDeviceSession(channel, remoteAddress);
+        if (deviceSession == null) {
+            return null;
+        }
+
         switch (pid) {
             case 0x01: // Login package
                 sendResponse(channel, pid, sequence);
@@ -103,9 +113,8 @@ public class IterProtocolDecoder extends BaseProtocolDecoder {
             case 0x12: // Location package
             case 0x14: // Warning package
             case 0x15: // Report package
-                Position position = decodePosition(buf, sequence);
-                if (position != null && position.getValid()) {
-                    position.setDeviceId(getDeviceId());
+                Position position = decodePosition(buf, sequence, deviceSession);
+                if (position.getValid()) {
                     positions.add(position);
                 }
                 sendResponse(channel, pid, sequence);
