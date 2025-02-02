@@ -26,9 +26,9 @@ public class ITRProtocolEncoder extends BaseProtocolEncoder {
         buf.writeByte(0x28);
         buf.writeByte(0x80);
         buf.writeShort(7 + content.length());
-        buf.writeShort(0); // placeholder para sequence
+        buf.writeShort(0);
         buf.writeByte(0x01);
-        buf.writeInt(0); // placeholder para ID
+        buf.writeInt(0);
         buf.writeBytes(content.getBytes(StandardCharsets.US_ASCII));
         return buf;
     }
