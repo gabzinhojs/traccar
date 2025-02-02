@@ -3,23 +3,21 @@ package org.traccar.protocol;
 import org.traccar.BaseProtocol;
 import org.traccar.PipelineBuilder;
 import org.traccar.TrackerServer;
-import org.traccar.config.Config;
 
 public class IterProtocol extends BaseProtocol {
 
-    public IterProtocol(Config config) {
-        super(config);
-        addServer(new TrackerServer(config, getName(), false) {
+    public IterProtocol() {
+        addServer(new TrackerServer(false) {
             @Override
-            protected void addProtocolHandlers(PipelineBuilder pipeline, Config config) {
+            protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new IterFrameDecoder());
                 pipeline.addLast(new IterProtocolDecoder(IterProtocol.this));
                 pipeline.addLast(new IterProtocolEncoder(IterProtocol.this));
             }
         });
-        addServer(new TrackerServer(config, getName(), true) {
+        addServer(new TrackerServer(true) {
             @Override
-            protected void addProtocolHandlers(PipelineBuilder pipeline, Config config) {
+            protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 pipeline.addLast(new IterFrameDecoder());
                 pipeline.addLast(new IterProtocolDecoder(IterProtocol.this));
                 pipeline.addLast(new IterProtocolEncoder(IterProtocol.this));
