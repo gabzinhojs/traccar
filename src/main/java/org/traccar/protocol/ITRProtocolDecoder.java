@@ -4,19 +4,6 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
-import org.traccar.BaseProtocolDecoder;
-import org.traccar.Context;
-import org.traccar.DeviceSession;
-import org.traccar.NetworkMessage;
-import org.traccar.Protocol;
-import org.traccar.helper.BitUtil;
-import org.traccar.helper.UnitsConverter;
-import org.traccar.model.CellTower;
-import org.traccar.model.Network;
-import org.traccar.model.Position;
-import org.traccar.model.Device;
-import org.traccar.model.WifiAccessPoint;
-
 import java.net.SocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -24,10 +11,23 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.traccar.BaseProtocolDecoder;
+import org.traccar.NetworkMessage;
+import org.traccar.Protocol;
+import org.traccar.helper.BitUtil;
+import org.traccar.helper.UnitsConverter;
+import org.traccar.model.CellTower;
+import org.traccar.model.Device;
+import org.traccar.model.Network;
+import org.traccar.model.Position;
+import org.traccar.model.WifiAccessPoint;
+import org.traccar.session.DeviceSession;
 
 public class ITRProtocolDecoder extends BaseProtocolDecoder {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ITRProtocolDecoder.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(
+        ITRProtocolDecoder.class
+    );
 
     private static final int PID_LOGIN = 0x01;
     private static final int PID_HBT = 0x03;
@@ -43,7 +43,13 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
         super(protocol);
     }
 
-    private Object decodeLogin(int seq, Channel channel, SocketAddress remoteAddress, ByteBuf buf, DeviceSession deviceSession) throws Exception {
+    private Object decodeLogin(
+        int seq,
+        Channel channel,
+        SocketAddress remoteAddress,
+        ByteBuf buf,
+        DeviceSession deviceSession
+    ) throws Exception {
         String imei = ByteBufUtil.hexDump(buf.readSlice(8)).substring(1);
 
         deviceSession = getDeviceSession(channel, remoteAddress, imei);
@@ -60,12 +66,20 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
             response.writeShort(0x01);
             response.writeByte(0x00);
 
-            channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
+            channel.writeAndFlush(
+                new NetworkMessage(response, channel.remoteAddress())
+            );
             return null;
         }
     }
 
-    private Object decodeHBT(int seq, Channel channel, SocketAddress remoteAddress, ByteBuf buf, DeviceSession deviceSession) throws Exception {
+    private Object decodeHBT(
+        int seq,
+        Channel channel,
+        SocketAddress remoteAddress,
+        ByteBuf buf,
+        DeviceSession deviceSession
+    ) throws Exception {
         if (deviceSession == null) {
             return null;
         }
@@ -88,7 +102,9 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
         response.writeShort(2); //size
         response.writeShort(seq); //seq
 
-        channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
+        channel.writeAndFlush(
+            new NetworkMessage(response, channel.remoteAddress())
+        );
         return position;
     }
 
@@ -133,7 +149,9 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
             position.setLatitude(latitude);
             position.setLongitude(longitude);
             position.setAltitude(buf.readShort());
-            position.setSpeed(UnitsConverter.knotsFromKph(buf.readUnsignedShort()));
+            position.setSpeed(
+                UnitsConverter.knotsFromKph(buf.readUnsignedShort())
+            );
             position.setCourse(buf.readUnsignedShort());
 
             position.set(Position.KEY_SATELLITES, buf.readUnsignedByte());
@@ -148,13 +166,21 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
             int rssi = -110 + buf.readUnsignedByte();
 
             position.set(Position.KEY_RSSI, rssi);
-            position.setNetwork(new Network(CellTower.from(mcc, mnc, lac, cid)));
+            position.setNetwork(
+                new Network(CellTower.from(mcc, mnc, lac, cid))
+            );
         }
 
         return position;
     }
 
-    private Object decodeLocation(int seq, Channel channel, SocketAddress remoteAddress, ByteBuf buf, DeviceSession deviceSession) throws Exception {
+    private Object decodeLocation(
+        int seq,
+        Channel channel,
+        SocketAddress remoteAddress,
+        ByteBuf buf,
+        DeviceSession deviceSession
+    ) throws Exception {
         if (deviceSession == null) {
             return null;
         }
@@ -181,11 +207,19 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
         response.writeShort(2); //size
         response.writeShort(seq); //seq
 
-        channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
+        channel.writeAndFlush(
+            new NetworkMessage(response, channel.remoteAddress())
+        );
         return position;
     }
 
-    private Object decodeMessage(int seq, Channel channel, SocketAddress remoteAddress, ByteBuf buf, DeviceSession deviceSession) throws Exception {
+    private Object decodeMessage(
+        int seq,
+        Channel channel,
+        SocketAddress remoteAddress,
+        ByteBuf buf,
+        DeviceSession deviceSession
+    ) throws Exception {
         if (deviceSession == null) {
             return null;
         }
@@ -201,11 +235,19 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
         response.writeShort(2); //size
         response.writeShort(seq); //seq
 
-        channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
+        channel.writeAndFlush(
+            new NetworkMessage(response, channel.remoteAddress())
+        );
         return null;
     }
 
-    private Object decodeReport(int seq, Channel channel, SocketAddress remoteAddress, ByteBuf buf, DeviceSession deviceSession) throws Exception {
+    private Object decodeReport(
+        int seq,
+        Channel channel,
+        SocketAddress remoteAddress,
+        ByteBuf buf,
+        DeviceSession deviceSession
+    ) throws Exception {
         if (deviceSession == null) {
             return null;
         }
@@ -234,7 +276,10 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
         buf.skipBytes(8);
 
         if (buf.readableBytes() >= 2) {
-            position.set(Position.KEY_BATTERY, buf.readUnsignedShort() / 1000.0);
+            position.set(
+                Position.KEY_BATTERY,
+                buf.readUnsignedShort() / 1000.0
+            );
         }
 
         if (buf.readableBytes() >= 2) {
@@ -252,11 +297,19 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
         response.writeShort(2); //size
         response.writeShort(seq); //seq
 
-        channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
+        channel.writeAndFlush(
+            new NetworkMessage(response, channel.remoteAddress())
+        );
         return null;
     }
 
-    private Object decodeWarning(int seq, Channel channel, SocketAddress remoteAddress, ByteBuf buf, DeviceSession deviceSession) throws Exception {
+    private Object decodeWarning(
+        int seq,
+        Channel channel,
+        SocketAddress remoteAddress,
+        ByteBuf buf,
+        DeviceSession deviceSession
+    ) throws Exception {
         if (deviceSession == null) {
             return null;
         }
@@ -269,13 +322,13 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
 
         switch (warning) {
             case 0x01:
-                position.set(Position.KEY_ALARM, "speed");
+                position.set(Position.KEY_ALARM, Position.ALARM_OVERSPEED);
                 break;
             case 0x02:
-                position.set(Position.KEY_ALARM, "overlimit");
+                position.set(Position.KEY_ALARM, Position.ALARM_ACCELERATION);
                 break;
             case 0x03:
-                position.set(Position.KEY_ALARM, "offroad");
+                position.set(Position.KEY_ALARM, Position.ALARM_GEOFENCE);
                 break;
         }
 
@@ -286,12 +339,18 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
         response.writeShort(2); //size
         response.writeShort(seq); //seq
 
-        channel.writeAndFlush(new NetworkMessage(response, channel.remoteAddress()));
+        channel.writeAndFlush(
+            new NetworkMessage(response, channel.remoteAddress())
+        );
         return position;
     }
 
     @Override
-    protected Object decode(Channel channel, SocketAddress remoteAddress, ByteBuf buf) throws Exception {
+    protected Object decode(
+        Channel channel,
+        SocketAddress remoteAddress,
+        ByteBuf buf
+    ) throws Exception {
         int pid = buf.readUnsignedByte();
         int seq = buf.readUnsignedByte();
 
@@ -299,17 +358,53 @@ public class ITRProtocolDecoder extends BaseProtocolDecoder {
 
         switch (pid) {
             case PID_LOGIN:
-                return decodeLogin(seq, channel, remoteAddress, buf, deviceSession);
+                return decodeLogin(
+                    seq,
+                    channel,
+                    remoteAddress,
+                    buf,
+                    deviceSession
+                );
             case PID_HBT:
-                return decodeHBT(seq, channel, remoteAddress, buf, deviceSession);
+                return decodeHBT(
+                    seq,
+                    channel,
+                    remoteAddress,
+                    buf,
+                    deviceSession
+                );
             case PID_LOCATION:
-                return decodeLocation(seq, channel, remoteAddress, buf, deviceSession);
+                return decodeLocation(
+                    seq,
+                    channel,
+                    remoteAddress,
+                    buf,
+                    deviceSession
+                );
             case PID_REPORT:
-                return decodeReport(seq, channel, remoteAddress, buf, deviceSession);
+                return decodeReport(
+                    seq,
+                    channel,
+                    remoteAddress,
+                    buf,
+                    deviceSession
+                );
             case PID_MESSAGE:
-                return decodeMessage(seq, channel, remoteAddress, buf, deviceSession);
+                return decodeMessage(
+                    seq,
+                    channel,
+                    remoteAddress,
+                    buf,
+                    deviceSession
+                );
             case PID_WARNING:
-                return decodeWarning(seq, channel, remoteAddress, buf, deviceSession);
+                return decodeWarning(
+                    seq,
+                    channel,
+                    remoteAddress,
+                    buf,
+                    deviceSession
+                );
             default:
                 LOGGER.error("Unknown protocol id: {}", pid);
                 return null;

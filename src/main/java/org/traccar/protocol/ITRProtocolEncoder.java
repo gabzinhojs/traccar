@@ -2,12 +2,12 @@ package org.traccar.protocol;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
-import org.traccar.BaseProtocolEncoder;
-import org.traccar.model.Command;
-import org.traccar.Protocol;
-
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
+import org.traccar.BaseProtocolEncoder;
+import org.traccar.Protocol;
+import org.traccar.helper.model.AttributeUtil;
+import org.traccar.model.Command;
 
 public class ITRProtocolEncoder extends BaseProtocolEncoder {
 
@@ -15,7 +15,7 @@ public class ITRProtocolEncoder extends BaseProtocolEncoder {
         super(protocol);
     }
 
-    private ByteBuf encodeContent(long deviceId, String content) {
+    private ByteBuf encodeContent(Command command, String content) {
         ByteBuf response = Unpooled.buffer();
 
         // Start of frame
@@ -35,10 +35,10 @@ public class ITRProtocolEncoder extends BaseProtocolEncoder {
         response.writeShort(sequence); // seq
 
         // Command type (1 for relay control)
-        response.writeByte(0x01); 
+        response.writeByte(0x01);
 
         // Some custom ID for the request (can be used for correlation)
-        response.writeInt(sequence); 
+        response.writeInt(sequence);
 
         // Adding content in ASCII encoding
         response.writeBytes(content.getBytes(StandardCharsets.US_ASCII));
@@ -50,11 +50,14 @@ public class ITRProtocolEncoder extends BaseProtocolEncoder {
     protected Object encodeCommand(Command command) {
         switch (command.getType()) {
             case Command.TYPE_ENGINE_STOP:
-                return encodeContent(command.getDeviceId(), "RELAY,1#");
+                return encodeContent(command, "RELAY,1#");
             case Command.TYPE_ENGINE_RESUME:
-                return encodeContent(command.getDeviceId(), "RELAY,0#");
+                return encodeContent(command, "RELAY,0#");
             case Command.TYPE_CUSTOM:
-                return encodeContent(command.getDeviceId(), command.getString(Command.KEY_DATA));
+                return encodeContent(
+                    command,
+                    command.getString(Command.KEY_DATA)
+                );
             default:
                 return null;
         }

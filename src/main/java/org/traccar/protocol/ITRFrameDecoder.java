@@ -1,15 +1,13 @@
-package org.traccar.protocol;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
 import org.traccar.BaseFrameDecoder;
 
 public class ITRFrameDecoder extends BaseFrameDecoder {
 
     @Override
     protected Object decode(
-            ChannelHandlerContext ctx, Channel channel, ByteBuf buf) throws Exception {
+            Channel channel, ByteBuf buf) throws Exception {
 
         // Verifica o início do pacote (validação do cabeçalho)
         if (buf.getByte(buf.readerIndex()) != 0x28 || buf.getByte(buf.readerIndex() + 1) != 0x28) {
@@ -32,4 +30,3 @@ public class ITRFrameDecoder extends BaseFrameDecoder {
 
         return null;
     }
-}
