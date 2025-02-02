@@ -1,26 +1,19 @@
-package org.traccar.protocol;
-
-import org.traccar.BaseProtocol;
-import org.traccar.PipelineBuilder;
-import org.traccar.TrackerServer;
-
 public class IterProtocol extends BaseProtocol {
-
-    public IterProtocol() {
-        addServer(new TrackerServer(false) {
+    
+    public IterProtocol(Config config) {
+        super(config);
+        
+        addServer(new TrackerServer(config, getName(), false) {
             @Override
-            protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new IterFrameDecoder());
+            protected void addProtocolHandlers(PipelineBuilder pipeline, Config config) {
                 pipeline.addLast(new IterProtocolDecoder(IterProtocol.this));
-                pipeline.addLast(new IterProtocolEncoder(IterProtocol.this));
             }
         });
-        addServer(new TrackerServer(true) {
+        
+        addServer(new TrackerServer(config, getName(), true) {
             @Override
-            protected void addProtocolHandlers(PipelineBuilder pipeline) {
-                pipeline.addLast(new IterFrameDecoder());
+            protected void addProtocolHandlers(PipelineBuilder pipeline, Config config) {
                 pipeline.addLast(new IterProtocolDecoder(IterProtocol.this));
-                pipeline.addLast(new IterProtocolEncoder(IterProtocol.this));
             }
         });
     }
