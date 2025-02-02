@@ -13,25 +13,24 @@ public class ITRFrameDecoder extends BaseFrameDecoder {
         Channel channel,
         ByteBuf buf
     ) throws Exception {
-        if (buf.readableBytes() < 2) {
+        if (buf.readableBytes() < 5) {
             return null;
         }
 
+        int start = buf.readerIndex();
         if (
-            buf.getUnsignedByte(buf.readerIndex()) != 0x28 ||
-            buf.getUnsignedByte(buf.readerIndex() + 1) != 0x28
+            buf.getUnsignedByte(start) != 0x28 ||
+            buf.getUnsignedByte(start + 1) != 0x28
         ) {
             buf.skipBytes(1);
             return null;
         }
 
-        if (buf.readableBytes() < 5) {
-            return null;
+        int length = buf.getUnsignedShort(start + 3) + 5;
+        if (buf.readableBytes() >= length) {
+            return buf.readRetainedSlice(length);
         }
 
-        int length = buf.getUnsignedShort(buf.readerIndex() + 3) + 5;
-        return buf.readableBytes() >= length
-            ? buf.readRetainedSlice(length)
-            : null;
+        return null;
     }
 }

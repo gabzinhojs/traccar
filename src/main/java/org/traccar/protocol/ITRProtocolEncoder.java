@@ -14,16 +14,11 @@ public class ITRProtocolEncoder extends BaseProtocolEncoder {
         super(protocol);
     }
 
-    private DeviceSession getDeviceSession(Command command) {
-        return command.getDeviceId() != 0
-            ? getSession(command.getDeviceId())
-            : null;
-    }
-
-    private ByteBuf encodeContent(Command command, String content) {
-        DeviceSession deviceSession = getDeviceSession(command);
+    private ByteBuf encodeCommand(Command command, String content) {
+        DeviceSession deviceSession = getSessionManager()
+            .getDeviceSession(command.getDeviceId());
         if (deviceSession == null) {
-            throw new IllegalArgumentException("Session not found");
+            throw new IllegalArgumentException("Device session not found");
         }
 
         ByteBuf buf = Unpooled.buffer();
@@ -42,11 +37,11 @@ public class ITRProtocolEncoder extends BaseProtocolEncoder {
     protected Object encodeCommand(Command command) {
         switch (command.getType()) {
             case Command.TYPE_ENGINE_STOP:
-                return encodeContent(command, "RELAY,1#");
+                return encodeCommand(command, "RELAY,1#");
             case Command.TYPE_ENGINE_RESUME:
-                return encodeContent(command, "RELAY,0#");
+                return encodeCommand(command, "RELAY,0#");
             case Command.TYPE_CUSTOM:
-                return encodeContent(
+                return encodeCommand(
                     command,
                     command.getString(Command.KEY_DATA)
                 );
