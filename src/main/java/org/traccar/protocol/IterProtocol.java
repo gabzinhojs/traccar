@@ -1,5 +1,6 @@
 public class IterProtocol extends BaseProtocol {
     
+    @Inject
     public IterProtocol(Config config) {
         super(config);
         
