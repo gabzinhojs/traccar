@@ -21,7 +21,7 @@ public class ITRProtocol extends BaseProtocol {
             @Override
             protected void addProtocolHandlers(PipelineBuilder pipeline) {
                 // Adicionando os manipuladores de protocolo à pipeline
-                pipeline.addLast(new iTRFrameDecoder());
+                pipeline.addLast(new ITRFrameDecoder());
                 pipeline.addLast(new ITRProtocolEncoder(ITRProtocol.this));
                 pipeline.addLast(new ITRProtocolDecoder(ITRProtocol.this));
             }
